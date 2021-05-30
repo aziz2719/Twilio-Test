@@ -11,34 +11,31 @@ class UserRegisterSerializer(serializers.Serializer):
     phone = serializers.CharField()
 
     def Generate(self):
-        self.Gencode = random.randint(1000, 9999)
-    
-    def returnCode(self):
-        code = self.Gencode
-        return code
+        self.Gencode = str(random.randint(1000, 9999))
+        codes = []
+        codes.append(self.Gencode)
+        return codes
 
     def create(self, validated_data):
-        request = "GET /user/check/ HTTP/1.1"
         self.Generate()
         password = validated_data.pop('password')
         user = User.objects.create(**validated_data)
         user.set_password(password)
-        save(phone=validated_data["phone"], code=self.returnCode())
+        save(phone=validated_data["phone"], code=self.Generate())
         user.save()
-
         TokenModel.objects.create(user=user)
         return user
 
 class CheckCodeSerializer(serializers.Serializer):
     code = serializers.CharField()
-    print(code)
-    print(UserRegisterSerializer.returnCode)
-    if code == UserRegisterSerializer.returnCode:
-        print("true")
-    else:
-        print("false")
+ 
+    def create(self, validated_data):
+        if self.code == UserRegisterSerializer.Generate(self):
+            self.code = CheckCode.objects.create(**validated_data)
+        else:
+            print(False)
+        return self.code
 
 class UserLoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField()
-    
